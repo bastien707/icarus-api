@@ -1,19 +1,14 @@
-from flask import Flask, jsonify, request
+from flask import Blueprint, jsonify
 import ccxt
 
 binance = ccxt.binance()
 from_ts = binance.parse8601('2022-11-11 12:42:11')
 ohlcv = binance.fetch_ohlcv('ETH/USD', '1m', since=from_ts, limit=1)
 
-app = Flask(__name__)
+ohclv_bp = Blueprint('ohclv', __name__)
 
 
-@app.route("/")
-def hello_world():
-    return "<p>Hello, World!</p>"
-
-
-@app.route('/ohclv', methods=["GET"])
+@ohclv_bp.route('/ohclv', methods=["GET"])
 def ohclv():
     ohlcv_data = {
         "open": ohlcv[0][1],
