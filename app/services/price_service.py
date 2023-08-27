@@ -2,17 +2,14 @@ from flask import jsonify
 import ccxt
 
 binance = ccxt.binance()
+status = binance.fetch_status()
 
 
 def get_price(ticker):
     try:
         upper_ticker = ticker.upper()
 
-        if upper_ticker not in binance.symbols:
-            return jsonify({"error": "Invalid ticker"})
-
         price = binance.fetch_ticker(upper_ticker)
-
         response = {
             "last": price['last'],
             "change": price['change'],

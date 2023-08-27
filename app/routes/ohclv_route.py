@@ -1,21 +1,33 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 import ccxt
 
 binance = ccxt.binance()
-from_ts = binance.parse8601('2022-11-11 12:42:11')
-ohlcv = binance.fetch_ohlcv('ETH/USD', '1m', since=from_ts, limit=1)
 
 ohclv_bp = Blueprint('ohclv', __name__)
 
 
-@ohclv_bp.route('/ohclv', methods=["GET"])
+@ohclv_bp.route('/ohclv', methods=["POST"])
+# params: ticker, date
+# ticker format: BTC/USDT
+# date format: DD-MM-YYYY HH:MM:SS
 def ohclv():
-    ohlcv_data = {
-        "open": ohlcv[0][1],
-        "high": ohlcv[0][2],
-        "low": ohlcv[0][3],
-        "close": ohlcv[0][4],
-        "volume": ohlcv[0][5],
-        "timestamp": ohlcv[0][0] * 1000
-    }
-    return jsonify(ohlcv_data)
+    try:
+        data = request.json
+        ticker = data.get('ticker')
+        date = data.get('date')
+
+        from_ts = binance.parse8601(date)
+        ohlcv = binance.fetch_ohlcv(ticker, '1m', since=from_ts, limit=1)
+        return jsonify(
+            {
+                "open": ohlcv[0][1],
+                "high": ohlcv[0][2],
+                "low": ohlcv[0][3],
+                "close": ohlcv[0][4],
+                "volume": ohlcv[0][5],
+                "timestamp": ohlcv[0][0]
+            }
+        )
+    except Exception as e:
+        print(f"Error fetching ohclv: {e}")
+        return jsonify(f"error: Error while fetching ohclv"), 500
